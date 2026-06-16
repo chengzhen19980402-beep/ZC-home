@@ -212,6 +212,11 @@
     .btn-primary:hover{background:var(--accent-hover)}
     .btn-cancel{background:var(--bg-alt);color:var(--text);border:1px solid var(--border)}
     .btn-cancel:hover{background:var(--border)}
+    .btn-local{
+      background:var(--bg);color:var(--accent);border:1px dashed var(--accent);
+      padding:8px 16px;font-size:13px;
+    }
+    .btn-local:hover{background:#ddf4ff;border-style:solid}
 
     /* ========== Delete Button on Cards ========== */
     .card-wrapper{position:relative}
@@ -669,9 +674,13 @@
       <label id="insert-modal-label" for="insert-url">图片 URL</label>
       <input type="url" id="insert-url" placeholder="https://example.com/image.jpg" autocomplete="off">
     </div>
+    <div class="form-group" id="insert-file-group" style="display:none">
+      <input type="file" id="insert-file" accept="image/*" hidden onchange="handleLocalFile(this)">
+      <button type="button" class="btn btn-local" onclick="document.getElementById('insert-file').click()">&#128193; 选择本地文件</button>
+    </div>
     <div class="form-group" id="insert-caption-group" style="display:none">
-      <label for="insert-caption">视频标题（可选）</label>
-      <input type="text" id="insert-caption" placeholder="视频标题">
+      <label for="insert-caption">图片描述（可选）</label>
+      <input type="text" id="insert-caption" placeholder="图片描述">
     </div>
     <div class="insert-preview" id="insert-preview"></div>
     <div class="insert-actions">
@@ -1194,21 +1203,29 @@ void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi) {
     const captionGroup = document.getElementById('insert-caption-group');
     const captionInput = document.getElementById('insert-caption');
     const captionLabel = document.querySelector('#insert-caption-group label');
+    const fileGroup = document.getElementById('insert-file-group');
+    const fileInput = document.getElementById('insert-file');
     const preview = document.getElementById('insert-preview');
 
     urlInput.value = '';
     captionInput.value = '';
     preview.innerHTML = '';
     captionGroup.style.display = 'none';
+    fileGroup.style.display = 'none';
+    fileInput.value = '';
+    urlInput.style.display = 'block';
+    document.getElementById('insert-modal-label').style.display = 'block';
+    window._localFileData = null;
 
     if (mode === 'image') {
       title.textContent = '插入图片';
-      label.textContent = '图片 URL';
+      label.textContent = '图片 URL（或点击下方按钮选择本地文件）';
       urlInput.placeholder = 'https://example.com/image.jpg';
       urlInput.type = 'url';
       captionInput.placeholder = '图片描述（alt，可选）';
       captionGroup.style.display = 'block';
       if (captionLabel) captionLabel.textContent = '图片描述';
+      fileGroup.style.display = 'block';
       urlInput.oninput = function() {
         const url = this.value.trim();
         if (url && (url.match(/\.(jpg|jpeg|png|gif|webp|svg|bmp)(\?.*)?$/i) || url.match(/\/img\//) || url.match(/\/image\//))) {
@@ -1249,6 +1266,26 @@ void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi) {
   function insertImage() { router('image'); }
   function insertVideo() { router('video'); }
 
+  /* ========== Local File Handler ========== */
+  function handleLocalFile(input) {
+    const file = input.files && input.files[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      showToast('图片不能超过 5MB');
+      input.value = '';
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const dataUrl = e.target.result;
+      window._localFileData = dataUrl;
+      document.getElementById('insert-url').value = '[本地文件] ' + file.name;
+      const preview = document.getElementById('insert-preview');
+      preview.innerHTML = `<img src="${dataUrl}" alt="${file.name}" style="max-width:100%;max-height:140px;border-radius:6px">`;
+    };
+    reader.readAsDataURL(file);
+  }
+
   /* ========== Confirm Insert ========== */
   function confirmInsert() {
     const url = document.getElementById('insert-url').value.trim();
@@ -1260,8 +1297,11 @@ void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi) {
 
     let html = '';
     if (insertMode === 'image') {
+      const src = window._localFileData || url;
+      if (!src) { showToast('请选择图片或输入 URL'); return; }
       const alt = caption || '图片';
-      html = `<p><img src="${escapeHtml(url)}" alt="${escapeHtml(alt)}"></p>`;
+      html = `<p><img src="${escapeHtml(src)}" alt="${escapeHtml(alt)}"></p>`;
+      window._localFileData = null;
     } else if (insertMode === 'video') {
       html = generateVideoEmbed(url);
     } else if (insertMode === 'link') {
