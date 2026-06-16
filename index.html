@@ -226,6 +226,42 @@
     .card-delete:hover{background:#cf222e;color:#fff;border-color:#cf222e}
     .empty-state{grid-column:1/-1;text-align:center;padding:40px;color:var(--text-muted)}
 
+    /* ========== Trash Badge ========== */
+    .trash-badge{
+      display:inline-flex;align-items:center;justify-content:center;
+      min-width:18px;height:18px;padding:0 5px;border-radius:9px;
+      background:#cf222e;color:#fff;font-size:11px;font-weight:700;
+      margin-left:4px;vertical-align:middle;
+    }
+
+    /* ========== Trash Page ========== */
+    .trash-page{display:none;max-width:1200px;margin:0 auto;padding:30px 24px}
+    .trash-page.show{display:block}
+    .trash-toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+    .trash-toolbar h2{font-size:20px;font-weight:700}
+    .btn-danger{
+      padding:8px 16px;background:#cf222e;color:#fff;border:none;border-radius:6px;
+      font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;
+    }
+    .btn-danger:hover{background:#a40e26}
+    .btn-restore{
+      padding:6px 14px;background:var(--accent);color:#fff;border:none;border-radius:6px;
+      font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;
+    }
+    .btn-restore:hover{background:var(--accent-hover)}
+    .trash-item{
+      display:flex;align-items:center;gap:16px;padding:14px 18px;
+      border:1px solid var(--border);border-radius:var(--radius);margin-bottom:10px;
+      transition:all .2s;background:var(--bg);
+    }
+    .trash-item:hover{background:var(--bg-alt)}
+    .trash-item-info{flex:1;min-width:0}
+    .trash-item-title{font-size:15px;font-weight:600;margin-bottom:4px;
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .trash-item-meta{font-size:12px;color:var(--text-muted);display:flex;gap:12px}
+    .trash-item-actions{display:flex;gap:8px;flex-shrink:0}
+    .trash-item .card-category{font-size:10px;padding:2px 8px}
+
     /* ========== Toast ========== */
     .toast{
       position:fixed;bottom:100px;left:50%;transform:translateX(-50%);
@@ -274,6 +310,9 @@
         <span class="plus">+</span> 新增文章
       </button>
       <button class="btn-manage" id="btn-manage" onclick="toggleManageMode()">管理</button>
+      <a href="#" onclick="showTrash();return false" style="margin-left:4px" id="nav-trash">
+        &#128465; 回收站<span class="trash-badge" id="trash-count" style="display:none">0</span>
+      </a>
     </nav>
   </div>
 </header>
@@ -333,6 +372,18 @@
         <span style="font-size:20px">&#9830;</span> RSS
       </a>
     </div>
+  </section>
+
+  <!-- ==================== TRASH PAGE ==================== -->
+  <section class="trash-page" id="trash-page">
+    <div class="trash-toolbar">
+      <h2>&#128465; 回收站</h2>
+      <div style="display:flex;gap:10px">
+        <button class="btn-danger" onclick="emptyTrash()" id="btn-empty-trash" style="display:none">清空回收站</button>
+        <button class="btn btn-cancel" onclick="hideTrash()">返回首页</button>
+      </div>
+    </div>
+    <div id="trash-list"></div>
   </section>
 
 </main>
@@ -430,6 +481,7 @@
   ];
 
   let articles = loadArticles();
+  let trash = loadTrash();
   let manageMode = false;
   let lastDeleted = null;
   let undoTimer = null;
@@ -444,6 +496,28 @@
 
   function saveArticles() {
     localStorage.setItem('blog_articles', JSON.stringify(articles));
+  }
+
+  function loadTrash() {
+    const saved = localStorage.getItem('blog_trash');
+    return saved ? JSON.parse(saved) : [];
+  }
+
+  function saveTrash() {
+    localStorage.setItem('blog_trash', JSON.stringify(trash));
+    updateTrashBadge();
+  }
+
+  function updateTrashBadge() {
+    const badge = document.getElementById('trash-count');
+    if (trash.length > 0) {
+      badge.style.display = 'inline-flex';
+      badge.textContent = trash.length;
+    } else {
+      badge.style.display = 'none';
+    }
+    const btn = document.getElementById('btn-empty-trash');
+    if (btn) btn.style.display = trash.length > 0 ? '' : 'none';
   }
 
   /* ========== Render ========== */
@@ -596,9 +670,11 @@
     const idx = articles.findIndex(a => a.id === id);
     if (idx === -1) return;
     lastDeleted = articles.splice(idx, 1)[0];
+    trash.unshift({ ...lastDeleted, deletedAt: Date.now() });
     saveArticles();
+    saveTrash();
     renderAll();
-    showToast('文章已删除', 'undo-delete');
+    showToast('文章已移至回收站', 'undo-delete');
     clearTimeout(undoTimer);
     undoTimer = setTimeout(() => { lastDeleted = null; }, 5000);
   }
@@ -606,9 +682,13 @@
   function undoDelete() {
     if (!lastDeleted) return;
     articles.unshift(lastDeleted);
+    const trashIdx = trash.findIndex(t => t.id === lastDeleted.id);
+    if (trashIdx !== -1) trash.splice(trashIdx, 1);
     lastDeleted = null;
     saveArticles();
+    saveTrash();
     renderAll();
+    if (document.getElementById('trash-page').classList.contains('show')) renderTrash();
     showToast('已撤销删除');
   }
 
@@ -617,6 +697,100 @@
     const a = articles.find(x => x.id === id);
     if (!a) return;
     showToast(`查看文章：${a.title}`);
+  }
+
+  /* ========== Trash Page ========== */
+  function showTrash() {
+    // Hide main content sections
+    document.getElementById('featured-section').style.display = 'none';
+    document.querySelectorAll('.section').forEach(s => s.style.display = 'none');
+    document.querySelector('.social').style.display = 'none';
+    // Show trash page
+    document.getElementById('trash-page').classList.add('show');
+    // Update nav
+    document.querySelectorAll('.nav a').forEach(a => a.classList.remove('active'));
+    document.getElementById('nav-trash').classList.add('active');
+    renderTrash();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function hideTrash() {
+    document.getElementById('trash-page').classList.remove('show');
+    document.querySelector('.social').style.display = '';
+    document.querySelectorAll('.nav a').forEach(a => a.classList.remove('active'));
+    document.querySelector('.nav a').classList.add('active');
+    renderAll();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function renderTrash() {
+    const list = document.getElementById('trash-list');
+    updateTrashBadge();
+    if (trash.length === 0) {
+      list.innerHTML = '<div class="empty-state">回收站是空的</div>';
+      return;
+    }
+    const timeAgo = ts => {
+      const diff = Date.now() - ts;
+      const mins = Math.floor(diff / 60000);
+      if (mins < 1) return '刚刚';
+      if (mins < 60) return `${mins} 分钟前`;
+      const hours = Math.floor(mins / 60);
+      if (hours < 24) return `${hours} 小时前`;
+      const days = Math.floor(hours / 24);
+      return `${days} 天前`;
+    };
+    list.innerHTML = trash.map(t => `
+      <div class="trash-item">
+        <div class="trash-item-info">
+          <div class="trash-item-title">${escapeHtml(t.title)}</div>
+          <div class="trash-item-meta">
+            <span class="card-category">${t.category}</span>
+            <span>删除于 ${timeAgo(t.deletedAt)}</span>
+          </div>
+        </div>
+        <div class="trash-item-actions">
+          <button class="btn-restore" onclick="restoreArticle(${t.id})">&#8634; 恢复</button>
+          <button class="btn-danger" onclick="permanentDelete(${t.id})">彻底删除</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function restoreArticle(id) {
+    const idx = trash.findIndex(t => t.id === id);
+    if (idx === -1) return;
+    const article = trash.splice(idx, 1)[0];
+    delete article.deletedAt;
+    articles.unshift(article);
+    saveArticles();
+    saveTrash();
+    renderTrash();
+    showToast('「' + article.title + '」已恢复');
+    // If trash is now empty, go back to home
+    if (trash.length === 0) { setTimeout(hideTrash, 600); }
+  }
+
+  function permanentDelete(id) {
+    if (!confirm('彻底删除后无法恢复，确定吗？')) return;
+    const idx = trash.findIndex(t => t.id === id);
+    if (idx === -1) return;
+    const title = trash[idx].title;
+    trash.splice(idx, 1);
+    saveTrash();
+    renderTrash();
+    showToast('「' + title + '」已彻底删除');
+    if (trash.length === 0) { setTimeout(hideTrash, 600); }
+  }
+
+  function emptyTrash() {
+    if (trash.length === 0) return;
+    if (!confirm(`回收站中有 ${trash.length} 篇文章，清空后无法恢复，确定吗？`)) return;
+    trash = [];
+    saveTrash();
+    renderTrash();
+    showToast('回收站已清空');
+    setTimeout(hideTrash, 600);
   }
 
   /* ========== Toast ========== */
@@ -651,6 +825,7 @@
 
   /* ========== Init ========== */
   renderAll();
+  updateTrashBadge();
 </script>
 
 </body>
