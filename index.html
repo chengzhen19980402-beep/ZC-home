@@ -262,6 +262,52 @@
     .trash-item-actions{display:flex;gap:8px;flex-shrink:0}
     .trash-item .card-category{font-size:10px;padding:2px 8px}
 
+    /* ========== Article Detail Overlay ========== */
+    .detail-overlay{
+      position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:200;
+      display:flex;align-items:center;justify-content:center;
+      opacity:0;pointer-events:none;transition:opacity .25s;
+    }
+    .detail-overlay.active{opacity:1;pointer-events:auto}
+    .detail-panel{
+      background:var(--bg);border-radius:var(--radius-lg);
+      width:90%;max-width:720px;max-height:85vh;overflow-y:auto;
+      box-shadow:0 20px 60px rgba(0,0,0,.25);transform:translateY(20px);
+      transition:transform .25s;
+    }
+    .detail-overlay.active .detail-panel{transform:translateY(0)}
+    .detail-hero-img{
+      width:100%;height:280px;object-fit:cover;display:block;
+      background:linear-gradient(135deg,#ddf4ff,#e6f0ff);
+      border-radius:var(--radius-lg) var(--radius-lg) 0 0;
+    }
+    .detail-hero-placeholder{
+      width:100%;height:200px;display:flex;align-items:center;justify-content:center;
+      font-size:64px;color:#fff;border-radius:var(--radius-lg) var(--radius-lg) 0 0;
+    }
+    .detail-content{padding:28px 32px 32px}
+    .detail-category{
+      display:inline-block;font-size:12px;font-weight:600;text-transform:uppercase;
+      letter-spacing:.5px;color:var(--accent);background:#ddf4ff;
+      padding:4px 12px;border-radius:20px;margin-bottom:12px;
+    }
+    .detail-title{font-size:26px;font-weight:700;line-height:1.35;margin-bottom:12px}
+    .detail-meta{
+      font-size:13px;color:var(--text-muted);margin-bottom:20px;
+      display:flex;gap:16px;flex-wrap:wrap;align-items:center;
+    }
+    .detail-desc{font-size:15px;color:var(--text);line-height:1.8;margin-bottom:20px}
+    .detail-actions{display:flex;gap:12px;flex-wrap:wrap}
+    .detail-close{
+      position:absolute;top:16px;right:16px;width:36px;height:36px;
+      background:rgba(255,255,255,.9);border:1px solid var(--border);
+      border-radius:50%;font-size:18px;cursor:pointer;display:flex;
+      align-items:center;justify-content:center;color:var(--text-muted);
+      transition:all .15s;z-index:5;
+    }
+    .detail-close:hover{background:var(--bg-alt);color:var(--text)}
+    .detail-img-wrapper{position:relative}
+
     /* ========== Toast ========== */
     .toast{
       position:fixed;bottom:100px;left:50%;transform:translateX(-50%);
@@ -285,6 +331,10 @@
       .featured{padding:24px 16px 12px}
       .footer-bottom{flex-direction:column;gap:12px;text-align:center}
       .fab{bottom:24px;right:24px;width:48px;height:48px;font-size:24px}
+      .detail-hero-img{height:180px}
+      .detail-hero-placeholder{height:150px;font-size:48px}
+      .detail-content{padding:20px}
+      .detail-title{font-size:20px}
     }
   </style>
 </head>
@@ -458,6 +508,27 @@
   </div>
 </div>
 
+<!-- ==================== ARTICLE DETAIL OVERLAY ==================== -->
+<div class="detail-overlay" id="detail-overlay" onclick="closeDetailOutside(event)">
+  <div class="detail-panel" onclick="event.stopPropagation()">
+    <button class="detail-close" onclick="closeDetail()" aria-label="关闭">&times;</button>
+    <div class="detail-img-wrapper">
+      <img class="detail-hero-img" id="detail-img" src="" alt="" style="display:none" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+      <div class="detail-hero-placeholder" id="detail-placeholder" style="display:none">&#128196;</div>
+    </div>
+    <div class="detail-content">
+      <span class="detail-category" id="detail-category"></span>
+      <h1 class="detail-title" id="detail-title"></h1>
+      <div class="detail-meta" id="detail-meta"></div>
+      <div class="detail-desc" id="detail-desc"></div>
+      <div class="detail-actions">
+        <button class="btn btn-primary" onclick="closeDetail()">返回列表</button>
+        <button class="btn btn-cancel" onclick="deleteFromDetail()">删除此文</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ==================== TOAST ==================== -->
 <div class="toast" id="toast"></div>
 
@@ -606,13 +677,41 @@
       if (a.textContent.includes(cat === 'all' ? '全部' : cat)) a.classList.add('active');
     });
 
-    // Scroll to top
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    // Ensure trash page is hidden and normal sections are visible
+    document.getElementById('trash-page').classList.remove('show');
+    document.querySelector('.social').style.display = '';
+    document.getElementById('featured-section').style.display = '';
+    document.querySelectorAll('.section').forEach(s => s.style.display = '');
+    renderAll();
+    closeMobileNav();
 
-    // Show alert with filtered info
-    if (cat === 'all') return;
-    const filtered = articles.filter(a => a.category === cat);
-    showToast(`${cat}分类共 ${filtered.length} 篇文章`);
+    // Scroll to category section
+    const sectionMap = {
+      '代码': 'category-code',
+      '架构': 'category-architecture',
+      '踩坑': 'category-debug',
+      '工具': 'category-tools',
+      '关于': null,
+      'all': null
+    };
+
+    const targetId = sectionMap[cat];
+    if (targetId) {
+      const el = document.getElementById(targetId);
+      if (el) {
+        const headerHeight = 72; // sticky header offset
+        const top = el.getBoundingClientRect().top + window.pageYOffset - headerHeight;
+        window.scrollTo({ top, behavior: 'smooth' });
+      }
+    } else {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Show toast with count
+    if (cat !== 'all' && cat !== '关于') {
+      const filtered = articles.filter(a => a.category === cat);
+      showToast(`${cat}分类共 ${filtered.length} 篇文章`);
+    }
   }
 
   /* ========== Modal ========== */
@@ -693,10 +792,60 @@
   }
 
   /* ========== View ========== */
+  let currentDetailId = null;
+
   function viewArticle(id) {
     const a = articles.find(x => x.id === id);
     if (!a) return;
-    showToast(`查看文章：${a.title}`);
+    currentDetailId = id;
+
+    // Populate detail panel
+    const img = document.getElementById('detail-img');
+    const placeholder = document.getElementById('detail-placeholder');
+    if (a.image) {
+      img.src = a.image;
+      img.style.display = 'block';
+      placeholder.style.display = 'none';
+    } else {
+      img.style.display = 'none';
+      placeholder.style.display = 'flex';
+      placeholder.style.background = `linear-gradient(135deg,${a.color},${a.color}cc)`;
+    }
+
+    document.getElementById('detail-category').textContent = a.category;
+    document.getElementById('detail-title').textContent = a.title;
+    document.getElementById('detail-desc').textContent = a.desc || '（暂无详细内容，敬请期待……）';
+
+    // Meta info
+    const dateStr = new Date(a.id).toLocaleDateString('zh-CN', {
+      year: 'numeric', month: 'long', day: 'numeric'
+    });
+    document.getElementById('detail-meta').innerHTML = `
+      <span>&#128197; ${dateStr}</span>
+      <span>&#128451; ${a.category}</span>
+      ${a.featured ? '<span style="color:#cf222e">&#11088; 精选</span>' : ''}
+    `;
+
+    // Show overlay
+    document.getElementById('detail-overlay').classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeDetail() {
+    document.getElementById('detail-overlay').classList.remove('active');
+    document.body.style.overflow = '';
+    currentDetailId = null;
+  }
+
+  function closeDetailOutside(e) {
+    if (e.target === document.getElementById('detail-overlay')) closeDetail();
+  }
+
+  function deleteFromDetail() {
+    if (!currentDetailId) return;
+    if (!confirm('确定要删除这篇文章吗？')) return;
+    deleteArticle(currentDetailId);
+    closeDetail();
   }
 
   /* ========== Trash Page ========== */
@@ -717,10 +866,13 @@
   function hideTrash() {
     document.getElementById('trash-page').classList.remove('show');
     document.querySelector('.social').style.display = '';
+    document.getElementById('featured-section').style.display = '';
+    document.querySelectorAll('.section').forEach(s => s.style.display = '');
     document.querySelectorAll('.nav a').forEach(a => a.classList.remove('active'));
     document.querySelector('.nav a').classList.add('active');
     renderAll();
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    closeMobileNav();
   }
 
   function renderTrash() {
@@ -816,7 +968,10 @@
 
   /* ========== Keyboard ========== */
   document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') closeModal();
+    if (e.key === 'Escape') {
+      closeModal();
+      closeDetail();
+    }
     if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
       e.preventDefault();
       openModal();
