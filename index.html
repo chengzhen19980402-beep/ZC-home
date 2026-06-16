@@ -373,7 +373,15 @@
     .editor-content:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(9,105,218,.12)}
     .editor-content h1,.editor-content h2,.editor-content h3{margin:.8em 0 .4em}
     .editor-content img{max-width:100%;border-radius:6px;margin:8px 0}
-    .editor-content video{max-width:100%;border-radius:6px;margin:8px 0}
+    .editor-content video,.editor-content iframe{max-width:100%;border-radius:6px;margin:8px 0}
+    .editor-content pre{
+      background:#1f2328;color:#e6edf3;padding:16px;border-radius:8px;
+      overflow-x:auto;margin:12px 0;font-size:13px;line-height:1.6;
+    }
+    .editor-content code{
+      background:#f3f4f6;padding:2px 6px;border-radius:4px;font-size:13px;
+    }
+    .editor-content pre code{background:none;padding:0;color:inherit}
 
     /* ========== Insert Modal (image/video URL) ========== */
     .insert-modal{
@@ -629,12 +637,13 @@
           <button type="button" onclick="execCmd('formatBlock','blockquote')" title="引用">&#10077;</button>
           <button type="button" onclick="execCmd('insertHorizontalRule')" title="分割线">&#8212;</button>
           <span class="toolbar-sep"></span>
-          <button type="button" onclick="execCmd('createLink',prompt('输入链接 URL:','https://'))" title="插入链接">&#128279; 链接</button>
+          <button type="button" onclick="insertLink()" title="插入链接">&#128279; 链接</button>
           <button type="button" onclick="insertImage()" title="插入图片">&#128247; 图片</button>
           <button type="button" onclick="insertVideo()" title="插入视频">&#127909; 视频</button>
+          <button type="button" onclick="insertCodeBlock()" title="插入代码块">&#9000; 代码</button>
           <span class="toolbar-sep"></span>
-          <button type="button" onclick="execCmd('undo')" title="撤销">&#8630;</button>
-          <button type="button" onclick="execCmd('redo')" title="重做">&#8631;</button>
+          <button type="button" onclick="execCmd('undo')" title="撤销 (Ctrl+Z)">&#8630;</button>
+          <button type="button" onclick="execCmd('redo')" title="重做 (Ctrl+Y)">&#8631;</button>
         </div>
         <div class="editor-content" id="editor-content" contenteditable="true"></div>
       </div>
@@ -910,6 +919,7 @@ void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi) {
       desc,
       image,
       featured,
+      content: '',
       color: COLORS[Math.floor(Math.random() * COLORS.length)]
     };
 
@@ -1025,23 +1035,33 @@ void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi) {
   }
 
   /* ========== Edit Mode ========== */
+  let editOriginalContent = '';
+
   function enterEditMode() {
     const a = articles.find(x => x.id === currentDetailId);
     if (!a) return;
 
     // Load content into editor
     document.getElementById('editor-content').innerHTML = a.content || '';
+    editOriginalContent = a.content || '';
 
     // Switch view
     document.getElementById('detail-body-view').style.display = 'none';
     document.getElementById('editor-wrapper').style.display = 'block';
     document.getElementById('detail-actions-view').style.display = 'none';
     document.getElementById('detail-actions-edit').style.display = 'flex';
+
+    // Focus editor
+    setTimeout(() => document.getElementById('editor-content').focus(), 100);
   }
 
-  function exitEditMode(confirmSave) {
-    if (confirmSave === false) {
-      // Just cancel, don't prompt
+  function exitEditMode(skipCheck) {
+    // Check for unsaved changes
+    if (!skipCheck) {
+      const current = document.getElementById('editor-content').innerHTML;
+      if (current !== editOriginalContent) {
+        if (!confirm('内容已修改，确定放弃编辑吗？')) return;
+      }
     }
 
     document.getElementById('detail-body-view').style.display = 'block';
@@ -1062,9 +1082,10 @@ void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi) {
 
     const html = document.getElementById('editor-content').innerHTML;
     a.content = html;
+    editOriginalContent = html;
     saveArticles();
 
-    exitEditMode();
+    exitEditMode(true);
     showToast('正文已保存！');
   }
 
@@ -1076,86 +1097,196 @@ void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi) {
     } else {
       document.execCommand(cmd, false, null);
     }
+    updateToolbarState();
   }
 
-  /* ========== Insert Image ========== */
-  function insertImage() {
-    insertMode = 'image';
-    document.getElementById('insert-modal-title').textContent = '插入图片';
-    document.getElementById('insert-modal-label').textContent = '图片 URL';
-    document.getElementById('insert-url').placeholder = 'https://example.com/image.jpg';
-    document.getElementById('insert-url').value = '';
-    document.getElementById('insert-caption-group').style.display = 'none';
-    document.getElementById('insert-preview').innerHTML = '';
-    document.getElementById('insert-modal').classList.add('active');
-    setTimeout(() => document.getElementById('insert-url').focus(), 100);
+  /* ========== Toolbar State Tracking ========== */
+  function updateToolbarState() {
+    const editor = document.getElementById('editor-content');
+    if (document.activeElement !== editor) return;
+    const cmds = ['bold', 'italic', 'underline'];
+    const toolbar = document.querySelector('.editor-toolbar');
+    if (!toolbar) return;
+    cmds.forEach(cmd => {
+      const buttons = toolbar.querySelectorAll('button');
+      buttons.forEach(btn => {
+        if (btn.getAttribute('onclick') && btn.getAttribute('onclick').includes("execCmd('" + cmd + "'")) {
+          btn.classList.toggle('active', document.queryCommandState(cmd));
+        }
+      });
+    });
+  }
 
-    // Live preview
-    const urlInput = document.getElementById('insert-url');
-    urlInput.oninput = function() {
-      const url = this.value.trim();
-      const preview = document.getElementById('insert-preview');
-      if (url && (url.endsWith('.jpg') || url.endsWith('.jpeg') || url.endsWith('.png') || url.endsWith('.gif') || url.endsWith('.webp') || url.includes('img') || url.includes('image'))) {
-        preview.innerHTML = `<img src="${escapeHtml(url)}" alt="预览" style="max-width:100%;max-height:140px;border-radius:6px" onerror="this.style.display='none'">`;
-      } else {
-        preview.innerHTML = '';
+  /* ========== Paste Image Support ========== */
+  document.addEventListener('DOMContentLoaded', function() {
+    const editor = document.getElementById('editor-content');
+    editor.addEventListener('paste', function(e) {
+      const items = e.clipboardData && e.clipboardData.items;
+      if (!items) return;
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        if (item.type.indexOf('image') === 0) {
+          e.preventDefault();
+          const blob = item.getAsFile();
+          const reader = new FileReader();
+          reader.onload = function(event) {
+            const imgHtml = `<p><img src="${event.target.result}" alt="粘贴的图片" style="max-width:100%"></p>`;
+            insertHTML(imgHtml);
+            showToast('图片已粘贴');
+          };
+          reader.readAsDataURL(blob);
+          return;
+        }
       }
-    };
-  }
+    });
 
-  /* ========== Insert Video ========== */
-  function insertVideo() {
-    insertMode = 'video';
-    document.getElementById('insert-modal-title').textContent = '插入视频';
-    document.getElementById('insert-modal-label').textContent = '视频 URL（支持 B站 / YouTube / 直接视频文件）';
-    document.getElementById('insert-url').placeholder = 'https://www.bilibili.com/video/BV... 或 https://youtu.be/...';
-    document.getElementById('insert-url').value = '';
-    document.getElementById('insert-caption-group').style.display = 'none';
-    document.getElementById('insert-preview').innerHTML = '';
-    document.getElementById('insert-modal').classList.add('active');
-    setTimeout(() => document.getElementById('insert-url').focus(), 100);
+    // Track selection changes for toolbar state
+    document.addEventListener('selectionchange', function() {
+      if (document.getElementById('editor-wrapper').style.display === 'block') {
+        updateToolbarState();
+      }
+    });
 
-    // Clear preview on input
-    document.getElementById('insert-url').oninput = function() {
-      document.getElementById('insert-preview').innerHTML = '<span style="font-size:13px;color:var(--text-muted)">输入 URL 后点击「插入」即可</span>';
-    };
-  }
+    // Update toolbar on keyup in editor (for undo/redo/format changes)
+    editor.addEventListener('keyup', function() {
+      updateToolbarState();
+    });
+    editor.addEventListener('mouseup', function() {
+      updateToolbarState();
+    });
+  });
 
-  /* ========== Confirm Insert ========== */
-  function confirmInsert() {
-    const url = document.getElementById('insert-url').value.trim();
-    if (!url) {
-      showToast('请输入 URL');
-      return;
-    }
-
-    let html = '';
-    if (insertMode === 'image') {
-      html = `<p><img src="${escapeHtml(url)}" alt="图片"></p>`;
-    } else if (insertMode === 'video') {
-      html = generateVideoEmbed(url);
-    }
-
-    // Insert at cursor position in contenteditable
+  /* ========== Insert Helper ========== */
+  function insertHTML(html) {
     const editor = document.getElementById('editor-content');
     editor.focus();
-
-    // Try to insert at cursor
     const sel = window.getSelection();
     if (sel.rangeCount > 0 && editor.contains(sel.anchorNode)) {
       const range = sel.getRangeAt(0);
       range.deleteContents();
       const fragment = range.createContextualFragment(html);
       range.insertNode(fragment);
-      // Move cursor after inserted content
       range.collapse(false);
+      sel.removeAllRanges();
+      sel.addRange(range);
     } else {
-      // Append to end
       editor.innerHTML += html;
     }
+  }
 
+  /* ========== Insert Link ========== */
+  function insertLink() {
+    router('link');
+  }
+
+  /* ========== Insert Code Block ========== */
+  function insertCodeBlock() {
+    router('code');
+  }
+
+  /* ========== Insert Image ========== */
+  /* General-purpose insert modal opener */
+  function router(mode) {
+    insertMode = mode;
+    const title = document.getElementById('insert-modal-title');
+    const label = document.getElementById('insert-modal-label');
+    const urlInput = document.getElementById('insert-url');
+    const captionGroup = document.getElementById('insert-caption-group');
+    const captionInput = document.getElementById('insert-caption');
+    const captionLabel = document.querySelector('#insert-caption-group label');
+    const preview = document.getElementById('insert-preview');
+
+    urlInput.value = '';
+    captionInput.value = '';
+    preview.innerHTML = '';
+    captionGroup.style.display = 'none';
+
+    if (mode === 'image') {
+      title.textContent = '插入图片';
+      label.textContent = '图片 URL';
+      urlInput.placeholder = 'https://example.com/image.jpg';
+      urlInput.type = 'url';
+      captionInput.placeholder = '图片描述（alt，可选）';
+      captionGroup.style.display = 'block';
+      if (captionLabel) captionLabel.textContent = '图片描述';
+      urlInput.oninput = function() {
+        const url = this.value.trim();
+        if (url && (url.match(/\.(jpg|jpeg|png|gif|webp|svg|bmp)(\?.*)?$/i) || url.match(/\/img\//) || url.match(/\/image\//))) {
+          preview.innerHTML = `<img src="${escapeHtml(url)}" alt="预览" style="max-width:100%;max-height:140px;border-radius:6px" onerror="this.style.display='none'">`;
+        } else {
+          preview.innerHTML = '';
+        }
+      };
+    } else if (mode === 'video') {
+      title.textContent = '插入视频';
+      label.textContent = '视频 URL（支持 B站 / YouTube / 直接视频文件）';
+      urlInput.placeholder = 'https://www.bilibili.com/video/BV... 或 https://youtu.be/...';
+      urlInput.type = 'url';
+      urlInput.oninput = function() {
+        preview.innerHTML = '<span style="font-size:13px;color:var(--text-muted)">输入 URL 后点击「插入」即可</span>';
+      };
+    } else if (mode === 'link') {
+      title.textContent = '插入链接';
+      label.textContent = '链接 URL';
+      urlInput.placeholder = 'https://example.com';
+      urlInput.type = 'url';
+      captionInput.placeholder = '链接显示文字';
+      captionGroup.style.display = 'block';
+      if (captionLabel) captionLabel.textContent = '显示文字';
+      urlInput.oninput = function() { preview.innerHTML = ''; };
+    } else if (mode === 'code') {
+      title.textContent = '插入代码块';
+      label.textContent = '编程语言（可选）';
+      urlInput.placeholder = '如 javascript, python, rust, c, bash…';
+      urlInput.type = 'text';
+      urlInput.oninput = function() { preview.innerHTML = ''; };
+    }
+
+    document.getElementById('insert-modal').classList.add('active');
+    setTimeout(() => urlInput.focus(), 100);
+  }
+
+  function insertImage() { router('image'); }
+  function insertVideo() { router('video'); }
+
+  /* ========== Confirm Insert ========== */
+  function confirmInsert() {
+    const url = document.getElementById('insert-url').value.trim();
+    const caption = document.getElementById('insert-caption').value.trim();
+    if (!url && insertMode !== 'code') {
+      showToast('请输入 URL');
+      return;
+    }
+
+    let html = '';
+    if (insertMode === 'image') {
+      const alt = caption || '图片';
+      html = `<p><img src="${escapeHtml(url)}" alt="${escapeHtml(alt)}"></p>`;
+    } else if (insertMode === 'video') {
+      html = generateVideoEmbed(url);
+    } else if (insertMode === 'link') {
+      if (!url) { showToast('请输入链接 URL'); return; }
+      const text = caption || url;
+      const sel = window.getSelection();
+      if (sel.rangeCount > 0 && !sel.isCollapsed) {
+        // Use selected text as link text
+        document.execCommand('createLink', false, url);
+        closeInsertModal();
+        showToast('链接已插入');
+        return;
+      }
+      html = `<a href="${escapeHtml(url)}" target="_blank" rel="noopener">${escapeHtml(text)}</a>`;
+    } else if (insertMode === 'code') {
+      const lang = url || '';
+      const langClass = lang ? ` class="language-${escapeHtml(lang.toLowerCase())}"` : '';
+      html = `<pre><code${langClass}>在此输入代码...</code></pre>`;
+    }
+
+    insertHTML(html);
     closeInsertModal();
-    showToast(insertMode === 'image' ? '图片已插入' : '视频已插入');
+    if (insertMode === 'image') showToast('图片已插入');
+    else if (insertMode === 'video') showToast('视频已插入');
+    else if (insertMode === 'code') showToast('代码块已插入，请直接在编辑器中编辑代码');
   }
 
   function generateVideoEmbed(url) {
@@ -1321,10 +1452,7 @@ void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi) {
     // Detail overlay open → Escape closes detail (unless editor focused and user wants undo)
     if (e.key === 'Escape') {
       if (document.getElementById('editor-wrapper').style.display === 'block') {
-        // In edit mode, Escape cancels edit
-        if (confirm('放弃编辑并退出？')) {
-          exitEditMode(false);
-        }
+        exitEditMode(); // prompts on unsaved changes
         e.preventDefault();
         return;
       }
