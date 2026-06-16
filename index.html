@@ -64,6 +64,15 @@
     .btn-add-header:hover{background:var(--accent-hover);transform:translateY(-1px)}
     .btn-add-header .plus{font-size:18px;line-height:1}
 
+    /* Manage mode button */
+    .btn-manage{
+      margin-left:8px;padding:8px 14px;background:transparent;color:var(--text-muted);
+      border:1px solid var(--border);border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;
+      transition:all .15s;
+    }
+    .btn-manage:hover{border-color:var(--accent);color:var(--accent)}
+    .btn-manage.active{background:#cf222e;color:#fff;border-color:#cf222e}
+
     /* Mobile nav */
     .nav-toggle{display:none;background:none;border:none;font-size:24px;cursor:pointer;padding:4px}
 
@@ -94,6 +103,10 @@
     .card-img-placeholder{
       width:100%;height:200px;display:flex;align-items:center;justify-content:center;
       font-size:48px;color:#fff;
+    }
+    .card-img-error{
+      width:100%;height:200px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+      background:#f6f8fa;color:var(--text-muted);font-size:13px;gap:8px;
     }
     .card-body{padding:16px 18px 20px}
     .card-category{
@@ -209,6 +222,7 @@
       z-index:5;color:#cf222e;transition:all .15s;
     }
     .card-wrapper:hover .card-delete{display:flex}
+    .manage-mode .card-delete{display:flex !important}
     .card-delete:hover{background:#cf222e;color:#fff;border-color:#cf222e}
     .empty-state{grid-column:1/-1;text-align:center;padding:40px;color:var(--text-muted)}
 
@@ -259,6 +273,7 @@
       <button class="btn-add-header" onclick="openModal()">
         <span class="plus">+</span> 新增文章
       </button>
+      <button class="btn-manage" id="btn-manage" onclick="toggleManageMode()">管理</button>
     </nav>
   </div>
 </header>
@@ -371,6 +386,13 @@
         <textarea id="desc" placeholder="写一段简短的描述..." rows="3"></textarea>
       </div>
       <div class="form-group">
+        <label for="image">封面图片 URL（可选）</label>
+        <input type="url" id="image" placeholder="https://example.com/image.jpg">
+        <div id="image-preview" style="margin-top:8px;display:none">
+          <img src="" alt="预览" style="max-width:100%;max-height:120px;border-radius:6px;border:1px solid var(--border);object-fit:cover;">
+        </div>
+      </div>
+      <div class="form-group">
         <label for="featured">设为精选</label>
         <select id="featured">
           <option value="false">否</option>
@@ -393,21 +415,24 @@
   /* ========== State ========== */
   const COLORS = ['#0969da','#1a7f37','#cf222e','#8250df','#bf3989','#0550ae'];
   const DEFAULT_ARTICLES = [
-    { id:1, title:'用 Rust 重写一个 TCP 协议栈', category:'代码', desc:'从零实现 TCP 协议栈，探讨拥塞控制、滑动窗口等核心机制，记录踩过的坑与性能优化经验。', featured:true, color:COLORS[0] },
-    { id:2, title:'从单体到微服务：我的架构演进之路', category:'架构', desc:'分享一个中型项目从单体架构逐步演进到微服务架构的完整过程，含选型对比与实际问题。', featured:true, color:COLORS[1] },
-    { id:3, title:'嵌入式 Linux 启动优化实战', category:'代码', desc:'将设备启动时间从 8 秒优化到 2.5 秒，详细记录内核裁剪、initramfs 与 systemd 的调优过程。', featured:true, color:COLORS[2] },
-    { id:4, title:'STM32 HAL 库的那些坑', category:'踩坑', desc:'SPI DMA 传输丢数据？I2C 总线卡死？整理 HAL 库开发中最常见的 10 个坑及解决方案。', featured:false, color:COLORS[3] },
-    { id:5, title:'设计一个高性能消息队列', category:'架构', desc:'从需求分析到技术选型，设计一个支持百万 TPS 的消息队列，并深入讨论存储与复制机制。', featured:false, color:COLORS[4] },
-    { id:6, title:'CMake 现代工程实践指南', category:'工具', desc:'告别混乱的 CMakeLists.txt，用 Modern CMake 最佳实践管理复杂的 C/C++ 嵌入式项目。', featured:false, color:COLORS[5] },
-    { id:7, title:'PostgreSQL 查询优化 20 条经验', category:'踩坑', desc:'整理实际项目中遇到的慢查询问题，覆盖索引设计、执行计划分析、锁排查等核心场景。', featured:false, color:COLORS[0] },
-    { id:8, title:'Docker 多阶段构建最佳实践', category:'工具', desc:'如何用多阶段构建将 Docker 镜像从 1.2GB 瘦身到 80MB，附完整 Dockerfile 示例。', featured:false, color:COLORS[1] },
-    { id:9, title:'自建 Git 服务器选型对比', category:'工具', desc:'Gitea vs GitLab vs Gogs 全面对比，从安装部署、资源占用到功能覆盖度的详细评测。', featured:false, color:COLORS[2] },
-    { id:10, title:'FreeRTOS 任务调度源码分析', category:'代码', desc:'深入 FreeRTOS 内核，逐行分析任务调度器的实现原理，理解抢占与时间片轮转的细节。', featured:false, color:COLORS[3] },
-    { id:11, title:'年终总结：2025 技术成长回顾', category:'关于', desc:'回顾过去一年的技术成长：掌握的新技能、参与的项目、阅读的书单，以及对 2026 的展望。', featured:false, color:COLORS[4] },
-    { id:12, title:'关于我', category:'关于', desc:'一枚嵌入式工程师，热爱开源，喜欢钻研底层原理。这里是我的技术自留地。', featured:false, color:COLORS[5] },
+    { id:1, title:'用 Rust 重写一个 TCP 协议栈', category:'代码', desc:'从零实现 TCP 协议栈，探讨拥塞控制、滑动窗口等核心机制，记录踩过的坑与性能优化经验。', featured:true, color:COLORS[0], image:'' },
+    { id:2, title:'从单体到微服务：我的架构演进之路', category:'架构', desc:'分享一个中型项目从单体架构逐步演进到微服务架构的完整过程，含选型对比与实际问题。', featured:true, color:COLORS[1], image:'' },
+    { id:3, title:'嵌入式 Linux 启动优化实战', category:'代码', desc:'将设备启动时间从 8 秒优化到 2.5 秒，详细记录内核裁剪、initramfs 与 systemd 的调优过程。', featured:true, color:COLORS[2], image:'' },
+    { id:4, title:'STM32 HAL 库的那些坑', category:'踩坑', desc:'SPI DMA 传输丢数据？I2C 总线卡死？整理 HAL 库开发中最常见的 10 个坑及解决方案。', featured:false, color:COLORS[3], image:'' },
+    { id:5, title:'设计一个高性能消息队列', category:'架构', desc:'从需求分析到技术选型，设计一个支持百万 TPS 的消息队列，并深入讨论存储与复制机制。', featured:false, color:COLORS[4], image:'' },
+    { id:6, title:'CMake 现代工程实践指南', category:'工具', desc:'告别混乱的 CMakeLists.txt，用 Modern CMake 最佳实践管理复杂的 C/C++ 嵌入式项目。', featured:false, color:COLORS[5], image:'' },
+    { id:7, title:'PostgreSQL 查询优化 20 条经验', category:'踩坑', desc:'整理实际项目中遇到的慢查询问题，覆盖索引设计、执行计划分析、锁排查等核心场景。', featured:false, color:COLORS[0], image:'' },
+    { id:8, title:'Docker 多阶段构建最佳实践', category:'工具', desc:'如何用多阶段构建将 Docker 镜像从 1.2GB 瘦身到 80MB，附完整 Dockerfile 示例。', featured:false, color:COLORS[1], image:'' },
+    { id:9, title:'自建 Git 服务器选型对比', category:'工具', desc:'Gitea vs GitLab vs Gogs 全面对比，从安装部署、资源占用到功能覆盖度的详细评测。', featured:false, color:COLORS[2], image:'' },
+    { id:10, title:'FreeRTOS 任务调度源码分析', category:'代码', desc:'深入 FreeRTOS 内核，逐行分析任务调度器的实现原理，理解抢占与时间片轮转的细节。', featured:false, color:COLORS[3], image:'' },
+    { id:11, title:'年终总结：2025 技术成长回顾', category:'关于', desc:'回顾过去一年的技术成长：掌握的新技能、参与的项目、阅读的书单，以及对 2026 的展望。', featured:false, color:COLORS[4], image:'' },
+    { id:12, title:'关于我', category:'关于', desc:'一枚嵌入式工程师，热爱开源，喜欢钻研底层原理。这里是我的技术自留地。', featured:false, color:COLORS[5], image:'' },
   ];
 
   let articles = loadArticles();
+  let manageMode = false;
+  let lastDeleted = null;
+  let undoTimer = null;
 
   function loadArticles() {
     const saved = localStorage.getItem('blog_articles');
@@ -423,17 +448,19 @@
 
   /* ========== Render ========== */
   function renderCard(a) {
+    const imgHtml = a.image
+      ? `<img src="${escapeHtml(a.image)}" class="card-img" alt="${escapeHtml(a.title)}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="card-img-error" style="display:none">&#128247; 图片加载失败</div>`
+      : `<div class="card-img-placeholder" style="background:linear-gradient(135deg,${a.color},${a.color}cc)">&#128196;</div>`;
+
     return `
       <div class="card-wrapper">
-        <button class="card-delete" title="删除" onclick="deleteArticle(${a.id})">&times;</button>
+        <button class="card-delete" title="删除" onclick="event.stopPropagation();deleteArticle(${a.id})">&times;</button>
         <div class="card" onclick="viewArticle(${a.id})">
-          <div class="card-img-placeholder" style="background:linear-gradient(135deg,${a.color},${a.color}cc)">
-            &#128196;
-          </div>
+          ${imgHtml}
           <div class="card-body">
             <span class="card-category">${a.category}</span>
-            <h3 class="card-title">${a.title}</h3>
-            ${a.desc ? `<p class="card-desc">${a.desc}</p>` : ''}
+            <h3 class="card-title">${escapeHtml(a.title)}</h3>
+            ${a.desc ? `<p class="card-desc">${escapeHtml(a.desc)}</p>` : ''}
           </div>
         </div>
       </div>`;
@@ -461,7 +488,42 @@
     document.getElementById('featured-section').style.display = featured.length ? '' : 'none';
   }
 
-  /* ========== Category Filter ========== */
+  /* ========== Utilities ========== */
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  /* ========== Image Preview ========== */
+  document.addEventListener('DOMContentLoaded', () => {
+    const imgInput = document.getElementById('image');
+    imgInput.addEventListener('input', function() {
+      const preview = document.getElementById('image-preview');
+      const img = preview.querySelector('img');
+      if (this.value.trim()) {
+        img.src = this.value.trim();
+        preview.style.display = 'block';
+      } else {
+        preview.style.display = 'none';
+      }
+    });
+  });
+
+  /* ========== Manage Mode ========== */
+  function toggleManageMode() {
+    manageMode = !manageMode;
+    const btn = document.getElementById('btn-manage');
+    if (manageMode) {
+      document.body.classList.add('manage-mode');
+      btn.classList.add('active');
+      btn.textContent = '退出管理';
+    } else {
+      document.body.classList.remove('manage-mode');
+      btn.classList.remove('active');
+      btn.textContent = '管理';
+    }
+  }
   function filterCategory(cat) {
     // Update nav active
     document.querySelectorAll('.nav a').forEach(a => a.classList.remove('active'));
@@ -500,6 +562,7 @@
     const title = document.getElementById('title').value.trim();
     const category = document.getElementById('category').value;
     const desc = document.getElementById('desc').value.trim();
+    const image = document.getElementById('image').value.trim();
     const featured = document.getElementById('featured').value === 'true';
 
     const newArticle = {
@@ -507,6 +570,7 @@
       title,
       category,
       desc,
+      image,
       featured,
       color: COLORS[Math.floor(Math.random() * COLORS.length)]
     };
@@ -529,11 +593,23 @@
 
   /* ========== Delete ========== */
   function deleteArticle(id) {
-    if (!confirm('确定要删除这篇文章吗？此操作不可撤销。')) return;
-    articles = articles.filter(a => a.id !== id);
+    const idx = articles.findIndex(a => a.id === id);
+    if (idx === -1) return;
+    lastDeleted = articles.splice(idx, 1)[0];
     saveArticles();
     renderAll();
-    showToast('文章已删除');
+    showToast('文章已删除', 'undo-delete');
+    clearTimeout(undoTimer);
+    undoTimer = setTimeout(() => { lastDeleted = null; }, 5000);
+  }
+
+  function undoDelete() {
+    if (!lastDeleted) return;
+    articles.unshift(lastDeleted);
+    lastDeleted = null;
+    saveArticles();
+    renderAll();
+    showToast('已撤销删除');
   }
 
   /* ========== View ========== */
@@ -544,12 +620,16 @@
   }
 
   /* ========== Toast ========== */
-  function showToast(msg) {
+  function showToast(msg, type) {
     const toast = document.getElementById('toast');
-    toast.textContent = msg;
+    if (type === 'undo-delete') {
+      toast.innerHTML = `${msg} &nbsp; <a href="#" onclick="undoDelete();return false" style="color:#58a6ff;font-weight:600">撤销</a>`;
+    } else {
+      toast.textContent = msg;
+    }
     toast.classList.add('show');
     clearTimeout(toast._timer);
-    toast._timer = setTimeout(() => toast.classList.remove('show'), 2500);
+    toast._timer = setTimeout(() => toast.classList.remove('show'), type === 'undo-delete' ? 5000 : 2500);
   }
 
   /* ========== Mobile Nav ========== */
