@@ -313,46 +313,12 @@
     .detail-close:hover{background:var(--bg-alt);color:var(--text)}
     .detail-img-wrapper{position:relative}
 
-    /* ========== Detail Body (view mode) ========== */
-    .detail-body-view{
-      font-size:15px;color:var(--text);line-height:1.9;
-      margin-bottom:24px;word-break:break-word;
-    }
-    .detail-body-view h1,.detail-body-view h2,.detail-body-view h3{
-      margin-top:1.4em;margin-bottom:.6em;font-weight:700;line-height:1.4;
-    }
-    .detail-body-view h1{font-size:22px}
-    .detail-body-view h2{font-size:19px}
-    .detail-body-view h3{font-size:17px}
-    .detail-body-view p{margin-bottom:1em}
-    .detail-body-view img{
-      max-width:100%;height:auto;border-radius:8px;margin:12px 0;
-      box-shadow:0 2px 8px rgba(0,0,0,.08);
-    }
-    .detail-body-view video,.detail-body-view iframe{
-      max-width:100%;border-radius:8px;margin:12px 0;
-    }
-    .detail-body-view code{
-      background:#f3f4f6;padding:2px 6px;border-radius:4px;font-size:13px;
-    }
-    .detail-body-view pre{
-      background:#1f2328;color:#e6edf3;padding:16px;border-radius:8px;
-      overflow-x:auto;margin:12px 0;font-size:13px;line-height:1.6;
-    }
-    .detail-body-view pre code{background:none;padding:0;color:inherit}
-    .detail-body-view blockquote{
-      border-left:4px solid var(--accent);padding:8px 16px;margin:12px 0;
-      background:#f6f8fa;color:var(--text-muted);border-radius:0 6px 6px 0;
-    }
-    .detail-body-view a{color:var(--accent)}
-    .detail-body-view ul,.detail-body-view ol{padding-left:24px;margin-bottom:1em}
-
-    /* ========== Editor ========== */
-    .editor-wrapper{display:none;margin-bottom:24px}
+    /* ========== Word-style Editor ========== */
     .editor-toolbar{
       display:flex;flex-wrap:wrap;gap:2px;padding:8px 10px;
       background:var(--bg-alt);border:1px solid var(--border);
-      border-radius:var(--radius) var(--radius) 0 0;align-items:center;
+      border-bottom:none;border-radius:var(--radius) var(--radius) 0 0;
+      align-items:center;position:relative;
     }
     .editor-toolbar .toolbar-sep{
       width:1px;height:24px;background:var(--border);margin:0 4px;
@@ -365,28 +331,52 @@
     }
     .editor-toolbar button:hover{background:#e0e3e6}
     .editor-toolbar button.active{background:#ddf4ff;color:var(--accent)}
-    .editor-content{
-      min-height:300px;padding:20px;border:1px solid var(--border);
-      border-top:none;border-radius:0 0 var(--radius) var(--radius);
-      font-size:15px;line-height:1.8;outline:none;overflow-y:auto;
-      max-height:50vh;
+    .save-status{
+      margin-left:auto;font-size:12px;color:var(--text-muted);
+      white-space:nowrap;padding-right:4px;
     }
-    .editor-content:empty::before{
-      content:'开始撰写正文…（支持工具栏插入图片和视频）';
+    .save-status.saving{color:#bf8700}
+    .save-status.saved{color:#1a7f37}
+    .editor-body{
+      min-height:300px;padding:20px;border:1px solid var(--border);
+      border-radius:0 0 var(--radius) var(--radius);
+      font-size:15px;line-height:1.9;outline:none;overflow-y:auto;
+      max-height:55vh;word-break:break-word;color:var(--text);
+      margin-bottom:24px;
+    }
+    .editor-body:empty::before{
+      content:'开始撰写正文…（支持图片、视频、代码块混排）';
       color:#8b949e;pointer-events:none;
     }
-    .editor-content:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(9,105,218,.12)}
-    .editor-content h1,.editor-content h2,.editor-content h3{margin:.8em 0 .4em}
-    .editor-content img{max-width:100%;border-radius:6px;margin:8px 0}
-    .editor-content video,.editor-content iframe{max-width:100%;border-radius:6px;margin:8px 0}
-    .editor-content pre{
+    .editor-body:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(9,105,218,.12)}
+    .editor-body h1,.editor-body h2,.editor-body h3{
+      margin-top:1.4em;margin-bottom:.6em;font-weight:700;line-height:1.4;
+    }
+    .editor-body h1{font-size:22px}
+    .editor-body h2{font-size:19px}
+    .editor-body h3{font-size:17px}
+    .editor-body p{margin-bottom:1em}
+    .editor-body img{
+      max-width:100%;height:auto;border-radius:8px;margin:12px 0;
+      box-shadow:0 2px 8px rgba(0,0,0,.08);
+    }
+    .editor-body video,.editor-body iframe{
+      max-width:100%;border-radius:8px;margin:12px 0;
+    }
+    .editor-body pre{
       background:#1f2328;color:#e6edf3;padding:16px;border-radius:8px;
       overflow-x:auto;margin:12px 0;font-size:13px;line-height:1.6;
     }
-    .editor-content code{
+    .editor-body code{
       background:#f3f4f6;padding:2px 6px;border-radius:4px;font-size:13px;
     }
-    .editor-content pre code{background:none;padding:0;color:inherit}
+    .editor-body pre code{background:none;padding:0;color:inherit}
+    .editor-body blockquote{
+      border-left:4px solid var(--accent);padding:8px 16px;margin:12px 0;
+      background:#f6f8fa;color:var(--text-muted);border-radius:0 6px 6px 0;
+    }
+    .editor-body a{color:var(--accent)}
+    .editor-body ul,.editor-body ol{padding-left:24px;margin-bottom:1em}
 
     /* ========== Insert Modal (image/video URL) ========== */
     .insert-modal{
@@ -624,43 +614,34 @@
       <h1 class="detail-title" id="detail-title"></h1>
       <div class="detail-meta" id="detail-meta"></div>
 
-      <!-- View mode: rendered content -->
-      <div class="detail-body-view" id="detail-body-view"></div>
-
-      <!-- Edit mode: toolbar + contenteditable -->
-      <div class="editor-wrapper" id="editor-wrapper">
-        <div class="editor-toolbar">
-          <button type="button" onclick="execCmd('bold')" title="加粗 (Ctrl+B)"><b>B</b></button>
-          <button type="button" onclick="execCmd('italic')" title="斜体 (Ctrl+I)"><i>I</i></button>
-          <button type="button" onclick="execCmd('underline')" title="下划线 (Ctrl+U)"><u>U</u></button>
-          <span class="toolbar-sep"></span>
-          <button type="button" onclick="execCmd('formatBlock','h2')" title="标题2">H2</button>
-          <button type="button" onclick="execCmd('formatBlock','h3')" title="标题3">H3</button>
-          <button type="button" onclick="execCmd('formatBlock','p')" title="正文">P</button>
-          <span class="toolbar-sep"></span>
-          <button type="button" onclick="execCmd('insertUnorderedList')" title="无序列表">&#8226; 列表</button>
-          <button type="button" onclick="execCmd('formatBlock','blockquote')" title="引用">&#10077;</button>
-          <button type="button" onclick="execCmd('insertHorizontalRule')" title="分割线">&#8212;</button>
-          <span class="toolbar-sep"></span>
-          <button type="button" onclick="insertLink()" title="插入链接">&#128279; 链接</button>
-          <button type="button" onclick="insertImage()" title="插入图片">&#128247; 图片</button>
-          <button type="button" onclick="insertVideo()" title="插入视频">&#127909; 视频</button>
-          <button type="button" onclick="insertCodeBlock()" title="插入代码块">&#9000; 代码</button>
-          <span class="toolbar-sep"></span>
-          <button type="button" onclick="execCmd('undo')" title="撤销 (Ctrl+Z)">&#8630;</button>
-          <button type="button" onclick="execCmd('redo')" title="重做 (Ctrl+Y)">&#8631;</button>
-        </div>
-        <div class="editor-content" id="editor-content" contenteditable="true"></div>
+      <!-- Word-style editor: toolbar always visible, body always editable -->
+      <div class="editor-toolbar" id="editor-toolbar">
+        <button type="button" onclick="execCmd('bold')" title="加粗 (Ctrl+B)"><b>B</b></button>
+        <button type="button" onclick="execCmd('italic')" title="斜体 (Ctrl+I)"><i>I</i></button>
+        <button type="button" onclick="execCmd('underline')" title="下划线 (Ctrl+U)"><u>U</u></button>
+        <span class="toolbar-sep"></span>
+        <button type="button" onclick="execCmd('formatBlock','h2')" title="标题2">H2</button>
+        <button type="button" onclick="execCmd('formatBlock','h3')" title="标题3">H3</button>
+        <button type="button" onclick="execCmd('formatBlock','p')" title="正文">P</button>
+        <span class="toolbar-sep"></span>
+        <button type="button" onclick="execCmd('insertUnorderedList')" title="无序列表">&#8226; 列表</button>
+        <button type="button" onclick="execCmd('formatBlock','blockquote')" title="引用">&#10077;</button>
+        <button type="button" onclick="execCmd('insertHorizontalRule')" title="分割线">&#8212;</button>
+        <span class="toolbar-sep"></span>
+        <button type="button" onclick="insertLink()" title="插入链接">&#128279; 链接</button>
+        <button type="button" onclick="insertImage()" title="插入图片">&#128247; 图片</button>
+        <button type="button" onclick="insertVideo()" title="插入视频">&#127909; 视频</button>
+        <button type="button" onclick="insertCodeBlock()" title="插入代码块">&#9000; 代码</button>
+        <span class="toolbar-sep"></span>
+        <button type="button" onclick="execCmd('undo')" title="撤销 (Ctrl+Z)">&#8630;</button>
+        <button type="button" onclick="execCmd('redo')" title="重做 (Ctrl+Y)">&#8631;</button>
+        <span class="save-status" id="save-status">已保存</span>
       </div>
+      <div class="editor-body" id="editor-body" contenteditable="true"></div>
 
-      <div class="detail-actions" id="detail-actions-view">
+      <div class="detail-actions" id="detail-actions">
         <button class="btn btn-primary" onclick="closeDetail()">返回列表</button>
-        <button class="btn" style="background:var(--accent);color:#fff" onclick="enterEditMode()">&#9998; 编辑正文</button>
         <button class="btn btn-cancel" onclick="deleteFromDetail()">删除此文</button>
-      </div>
-      <div class="detail-actions" id="detail-actions-edit" style="display:none">
-        <button class="btn btn-primary" onclick="saveContent()">&#128190; 保存</button>
-        <button class="btn btn-cancel" onclick="exitEditMode(false)">取消</button>
       </div>
     </div>
   </div>
@@ -1000,13 +981,9 @@ void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi) {
     document.getElementById('detail-category').textContent = a.category;
     document.getElementById('detail-title').textContent = a.title;
 
-    // Render content (HTML) in view mode
-    const bodyView = document.getElementById('detail-body-view');
-    if (a.content && a.content.trim()) {
-      bodyView.innerHTML = a.content;
-    } else {
-      bodyView.innerHTML = '<p style="color:var(--text-muted);font-style:italic">（暂无正文，点击「编辑正文」开始写作…）</p>';
-    }
+    // Set body content (Word-style: always editable)
+    const body = document.getElementById('editor-body');
+    body.innerHTML = a.content || '';
 
     // Meta info
     const dateStr = new Date(a.id).toLocaleDateString('zh-CN', {
@@ -1018,15 +995,27 @@ void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi) {
       ${a.featured ? '<span style="color:#cf222e">&#11088; 精选</span>' : ''}
     `;
 
-    // Ensure view mode is shown (not edit mode)
-    exitEditMode(false);
-
     // Show overlay
     document.getElementById('detail-overlay').classList.add('active');
     document.body.style.overflow = 'hidden';
+
+    // Focus editor body after render
+    setTimeout(() => {
+      const b = document.getElementById('editor-body');
+      b.focus();
+      const sel = window.getSelection();
+      if (b.childNodes.length) {
+        const r = document.createRange();
+        r.setStartAfter(b.lastChild);
+        r.collapse(true);
+        sel.removeAllRanges();
+        sel.addRange(r);
+      }
+    }, 150);
   }
 
   function closeDetail() {
+    saveNow();
     document.getElementById('detail-overlay').classList.remove('active');
     document.body.style.overflow = '';
     currentDetailId = null;
@@ -1043,75 +1032,47 @@ void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi) {
     closeDetail();
   }
 
-  /* ========== Edit Mode ========== */
-  let editOriginalContent = '';
-
-  function enterEditMode() {
-    const a = articles.find(x => x.id === currentDetailId);
-    if (!a) return;
-
-    // Load content into editor
-    document.getElementById('editor-content').innerHTML = a.content || '';
-    editOriginalContent = a.content || '';
-
-    // Switch view
-    document.getElementById('detail-body-view').style.display = 'none';
-    document.getElementById('editor-wrapper').style.display = 'block';
-    document.getElementById('detail-actions-view').style.display = 'none';
-    document.getElementById('detail-actions-edit').style.display = 'flex';
-
-    // Focus editor
-    setTimeout(() => document.getElementById('editor-content').focus(), 100);
+  /* ========== Auto-Save (Word-style: save on every change) ========== */
+  let autoSaveTimer = null;
+  function autoSave() {
+    const statusEl = document.getElementById('save-status');
+    statusEl.textContent = '保存中…';
+    statusEl.className = 'save-status saving';
+    clearTimeout(autoSaveTimer);
+    autoSaveTimer = setTimeout(() => {
+      saveNow();
+    }, 1200);
   }
 
-  function exitEditMode(skipCheck) {
-    // Check for unsaved changes
-    if (!skipCheck) {
-      const current = document.getElementById('editor-content').innerHTML;
-      if (current !== editOriginalContent) {
-        if (!confirm('内容已修改，确定放弃编辑吗？')) return;
-      }
-    }
-
-    document.getElementById('detail-body-view').style.display = 'block';
-    document.getElementById('editor-wrapper').style.display = 'none';
-    document.getElementById('detail-actions-view').style.display = 'flex';
-    document.getElementById('detail-actions-edit').style.display = 'none';
-
-    // Re-render content in view mode
-    const a = articles.find(x => x.id === currentDetailId);
-    if (a && a.content) {
-      document.getElementById('detail-body-view').innerHTML = a.content;
-    }
-  }
-
-  function saveContent() {
+  function saveNow() {
+    clearTimeout(autoSaveTimer);
     const a = articles.find(x => x.id === currentDetailId);
     if (!a) return;
-
-    const html = document.getElementById('editor-content').innerHTML;
+    const html = document.getElementById('editor-body').innerHTML;
+    if (html === a.content) return; // No change
     a.content = html;
-    editOriginalContent = html;
     saveArticles();
-
-    exitEditMode(true);
-    showToast('正文已保存！');
+    const statusEl = document.getElementById('save-status');
+    statusEl.textContent = '已保存';
+    statusEl.className = 'save-status saved';
+    setTimeout(() => { statusEl.className = 'save-status'; statusEl.textContent = '已保存'; }, 2000);
   }
 
   /* ========== Editor Toolbar ========== */
   function execCmd(cmd, val) {
-    document.getElementById('editor-content').focus();
+    document.getElementById('editor-body').focus();
     if (val !== undefined) {
       document.execCommand(cmd, false, val);
     } else {
       document.execCommand(cmd, false, null);
     }
     updateToolbarState();
+    autoSave();
   }
 
   /* ========== Toolbar State Tracking ========== */
   function updateToolbarState() {
-    const editor = document.getElementById('editor-content');
+    const editor = document.getElementById('editor-body');
     if (document.activeElement !== editor) return;
     const cmds = ['bold', 'italic', 'underline'];
     const toolbar = document.querySelector('.editor-toolbar');
@@ -1126,9 +1087,10 @@ void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi) {
     });
   }
 
-  /* ========== Paste Image Support ========== */
+  /* ========== Paste Image Support + Auto-Save Wireup ========== */
   document.addEventListener('DOMContentLoaded', function() {
-    const editor = document.getElementById('editor-content');
+    const editor = document.getElementById('editor-body');
+    // Paste images
     editor.addEventListener('paste', function(e) {
       const items = e.clipboardData && e.clipboardData.items;
       if (!items) return;
@@ -1141,6 +1103,7 @@ void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi) {
           reader.onload = function(event) {
             const imgHtml = `<p><img src="${event.target.result}" alt="粘贴的图片" style="max-width:100%"></p>`;
             insertHTML(imgHtml);
+            autoSave();
             showToast('图片已粘贴');
           };
           reader.readAsDataURL(blob);
@@ -1149,25 +1112,22 @@ void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi) {
       }
     });
 
-    // Track selection changes for toolbar state
-    document.addEventListener('selectionchange', function() {
-      if (document.getElementById('editor-wrapper').style.display === 'block') {
-        updateToolbarState();
-      }
+    // Auto-save on input
+    editor.addEventListener('input', function() {
+      autoSave();
     });
 
-    // Update toolbar on keyup in editor (for undo/redo/format changes)
-    editor.addEventListener('keyup', function() {
+    // Track selection changes for toolbar state
+    document.addEventListener('selectionchange', function() {
       updateToolbarState();
     });
-    editor.addEventListener('mouseup', function() {
-      updateToolbarState();
-    });
+    editor.addEventListener('keyup', function() { updateToolbarState(); });
+    editor.addEventListener('mouseup', function() { updateToolbarState(); });
   });
 
   /* ========== Insert Helper ========== */
   function insertHTML(html) {
-    const editor = document.getElementById('editor-content');
+    const editor = document.getElementById('editor-body');
     editor.focus();
     const sel = window.getSelection();
     if (sel.rangeCount > 0 && editor.contains(sel.anchorNode)) {
@@ -1323,6 +1283,7 @@ void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi) {
     }
 
     insertHTML(html);
+    autoSave();
     closeInsertModal();
     if (insertMode === 'image') showToast('图片已插入');
     else if (insertMode === 'video') showToast('视频已插入');
@@ -1489,22 +1450,20 @@ void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi) {
       e.preventDefault();
       return;
     }
-    // Detail overlay open → Escape closes detail (unless editor focused and user wants undo)
+    // Detail overlay open → Escape closes it
     if (e.key === 'Escape') {
-      if (document.getElementById('editor-wrapper').style.display === 'block') {
-        exitEditMode(); // prompts on unsaved changes
+      if (document.getElementById('detail-overlay').classList.contains('active')) {
+        closeDetail();
         e.preventDefault();
         return;
       }
-      closeDetail();
-      e.preventDefault();
-      return;
     }
-    // Ctrl+S → save content when in edit mode
+    // Ctrl+S → save
     if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-      if (document.getElementById('editor-wrapper').style.display === 'block') {
+      if (document.getElementById('detail-overlay').classList.contains('active')) {
         e.preventDefault();
-        saveContent();
+        saveNow();
+        showToast('已保存');
       }
     }
     if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
