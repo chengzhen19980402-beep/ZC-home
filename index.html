@@ -108,6 +108,15 @@
       width:100%;height:200px;display:flex;flex-direction:column;align-items:center;justify-content:center;
       background:#f6f8fa;color:var(--text-muted);font-size:13px;gap:8px;
     }
+    .card-upload-btn{
+      position:absolute;top:8px;right:8px;width:32px;height:32px;
+      background:rgba(255,255,255,.92);border:1px solid var(--border);border-radius:50%;
+      display:flex;align-items:center;justify-content:center;cursor:pointer;
+      font-size:16px;opacity:0;transition:opacity .15s;z-index:3;
+    }
+    .card-wrapper:hover .card-upload-btn{opacity:1}
+    .card-upload-btn:hover{background:#ddf4ff;border-color:var(--accent)}
+    .card-upload-input{display:none}
     .card-body{padding:16px 18px 20px}
     .card-category{
       display:inline-block;font-size:11px;font-weight:600;text-transform:uppercase;
@@ -764,6 +773,8 @@ void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi) {
     return `
       <div class="card-wrapper">
         <button class="card-delete" title="删除" onclick="event.stopPropagation();deleteArticle(${a.id})">&times;</button>
+        <button class="card-upload-btn" title="更换封面图片" onclick="event.stopPropagation();uploadCover(${a.id})">&#128247;</button>
+        <input type="file" class="card-upload-input" id="cover-upload-${a.id}" accept="image/*" onchange="handleCoverUpload(${a.id}, this)">
         <div class="card" onclick="viewArticle(${a.id})">
           ${imgHtml}
           <div class="card-body">
@@ -1242,6 +1253,32 @@ void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi) {
       document.getElementById('insert-url').value = '[本地文件] ' + file.name;
       const preview = document.getElementById('insert-preview');
       preview.innerHTML = `<img src="${dataUrl}" alt="${file.name}" style="max-width:100%;max-height:140px;border-radius:6px">`;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  /* ========== Cover Upload ========== */
+  function uploadCover(articleId) {
+    const input = document.getElementById('cover-upload-' + articleId);
+    if (input) input.click();
+  }
+
+  function handleCoverUpload(articleId, input) {
+    const file = input.files && input.files[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      showToast('图片不能超过 5MB');
+      input.value = '';
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const a = articles.find(x => x.id === articleId);
+      if (!a) return;
+      a.image = e.target.result;
+      saveArticles();
+      renderAll();
+      showToast('封面已更新');
     };
     reader.readAsDataURL(file);
   }
