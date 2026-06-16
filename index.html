@@ -308,6 +308,96 @@
     .detail-close:hover{background:var(--bg-alt);color:var(--text)}
     .detail-img-wrapper{position:relative}
 
+    /* ========== Detail Body (view mode) ========== */
+    .detail-body-view{
+      font-size:15px;color:var(--text);line-height:1.9;
+      margin-bottom:24px;word-break:break-word;
+    }
+    .detail-body-view h1,.detail-body-view h2,.detail-body-view h3{
+      margin-top:1.4em;margin-bottom:.6em;font-weight:700;line-height:1.4;
+    }
+    .detail-body-view h1{font-size:22px}
+    .detail-body-view h2{font-size:19px}
+    .detail-body-view h3{font-size:17px}
+    .detail-body-view p{margin-bottom:1em}
+    .detail-body-view img{
+      max-width:100%;height:auto;border-radius:8px;margin:12px 0;
+      box-shadow:0 2px 8px rgba(0,0,0,.08);
+    }
+    .detail-body-view video,.detail-body-view iframe{
+      max-width:100%;border-radius:8px;margin:12px 0;
+    }
+    .detail-body-view code{
+      background:#f3f4f6;padding:2px 6px;border-radius:4px;font-size:13px;
+    }
+    .detail-body-view pre{
+      background:#1f2328;color:#e6edf3;padding:16px;border-radius:8px;
+      overflow-x:auto;margin:12px 0;font-size:13px;line-height:1.6;
+    }
+    .detail-body-view pre code{background:none;padding:0;color:inherit}
+    .detail-body-view blockquote{
+      border-left:4px solid var(--accent);padding:8px 16px;margin:12px 0;
+      background:#f6f8fa;color:var(--text-muted);border-radius:0 6px 6px 0;
+    }
+    .detail-body-view a{color:var(--accent)}
+    .detail-body-view ul,.detail-body-view ol{padding-left:24px;margin-bottom:1em}
+
+    /* ========== Editor ========== */
+    .editor-wrapper{display:none;margin-bottom:24px}
+    .editor-toolbar{
+      display:flex;flex-wrap:wrap;gap:2px;padding:8px 10px;
+      background:var(--bg-alt);border:1px solid var(--border);
+      border-radius:var(--radius) var(--radius) 0 0;align-items:center;
+    }
+    .editor-toolbar .toolbar-sep{
+      width:1px;height:24px;background:var(--border);margin:0 4px;
+    }
+    .editor-toolbar button{
+      background:none;border:none;padding:6px 8px;border-radius:4px;
+      cursor:pointer;font-size:14px;color:var(--text);
+      display:flex;align-items:center;justify-content:center;min-width:32px;
+      transition:all .1s;
+    }
+    .editor-toolbar button:hover{background:#e0e3e6}
+    .editor-toolbar button.active{background:#ddf4ff;color:var(--accent)}
+    .editor-content{
+      min-height:300px;padding:20px;border:1px solid var(--border);
+      border-top:none;border-radius:0 0 var(--radius) var(--radius);
+      font-size:15px;line-height:1.8;outline:none;overflow-y:auto;
+      max-height:50vh;
+    }
+    .editor-content:empty::before{
+      content:'开始撰写正文…（支持工具栏插入图片和视频）';
+      color:#8b949e;pointer-events:none;
+    }
+    .editor-content:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(9,105,218,.12)}
+    .editor-content h1,.editor-content h2,.editor-content h3{margin:.8em 0 .4em}
+    .editor-content img{max-width:100%;border-radius:6px;margin:8px 0}
+    .editor-content video{max-width:100%;border-radius:6px;margin:8px 0}
+
+    /* ========== Insert Modal (image/video URL) ========== */
+    .insert-modal{
+      position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:210;
+      display:flex;align-items:center;justify-content:center;
+      opacity:0;pointer-events:none;transition:opacity .2s;
+    }
+    .insert-modal.active{opacity:1;pointer-events:auto}
+    .insert-dialog{
+      background:var(--bg);border-radius:var(--radius-lg);padding:28px;
+      width:90%;max-width:440px;box-shadow:0 20px 60px rgba(0,0,0,.2);
+    }
+    .insert-dialog h3{font-size:17px;font-weight:700;margin-bottom:16px}
+    .insert-dialog .form-group{margin-bottom:14px}
+    .insert-dialog label{display:block;font-size:13px;font-weight:600;margin-bottom:5px}
+    .insert-dialog input{
+      width:100%;padding:9px 12px;border:1px solid var(--border);
+      border-radius:6px;font-size:14px;
+    }
+    .insert-dialog input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(9,105,218,.12)}
+    .insert-preview{margin-top:8px}
+    .insert-preview img{max-width:100%;max-height:140px;border-radius:6px}
+    .insert-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:16px}
+
     /* ========== Toast ========== */
     .toast{
       position:fixed;bottom:100px;left:50%;transform:translateX(-50%);
@@ -510,7 +600,7 @@
 
 <!-- ==================== ARTICLE DETAIL OVERLAY ==================== -->
 <div class="detail-overlay" id="detail-overlay" onclick="closeDetailOutside(event)">
-  <div class="detail-panel" onclick="event.stopPropagation()">
+ <div class="detail-panel" onclick="event.stopPropagation()">
     <button class="detail-close" onclick="closeDetail()" aria-label="关闭">&times;</button>
     <div class="detail-img-wrapper">
       <img class="detail-hero-img" id="detail-img" src="" alt="" style="display:none" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
@@ -520,11 +610,64 @@
       <span class="detail-category" id="detail-category"></span>
       <h1 class="detail-title" id="detail-title"></h1>
       <div class="detail-meta" id="detail-meta"></div>
-      <div class="detail-desc" id="detail-desc"></div>
-      <div class="detail-actions">
+
+      <!-- View mode: rendered content -->
+      <div class="detail-body-view" id="detail-body-view"></div>
+
+      <!-- Edit mode: toolbar + contenteditable -->
+      <div class="editor-wrapper" id="editor-wrapper">
+        <div class="editor-toolbar">
+          <button type="button" onclick="execCmd('bold')" title="加粗 (Ctrl+B)"><b>B</b></button>
+          <button type="button" onclick="execCmd('italic')" title="斜体 (Ctrl+I)"><i>I</i></button>
+          <button type="button" onclick="execCmd('underline')" title="下划线 (Ctrl+U)"><u>U</u></button>
+          <span class="toolbar-sep"></span>
+          <button type="button" onclick="execCmd('formatBlock','h2')" title="标题2">H2</button>
+          <button type="button" onclick="execCmd('formatBlock','h3')" title="标题3">H3</button>
+          <button type="button" onclick="execCmd('formatBlock','p')" title="正文">P</button>
+          <span class="toolbar-sep"></span>
+          <button type="button" onclick="execCmd('insertUnorderedList')" title="无序列表">&#8226; 列表</button>
+          <button type="button" onclick="execCmd('formatBlock','blockquote')" title="引用">&#10077;</button>
+          <button type="button" onclick="execCmd('insertHorizontalRule')" title="分割线">&#8212;</button>
+          <span class="toolbar-sep"></span>
+          <button type="button" onclick="execCmd('createLink',prompt('输入链接 URL:','https://'))" title="插入链接">&#128279; 链接</button>
+          <button type="button" onclick="insertImage()" title="插入图片">&#128247; 图片</button>
+          <button type="button" onclick="insertVideo()" title="插入视频">&#127909; 视频</button>
+          <span class="toolbar-sep"></span>
+          <button type="button" onclick="execCmd('undo')" title="撤销">&#8630;</button>
+          <button type="button" onclick="execCmd('redo')" title="重做">&#8631;</button>
+        </div>
+        <div class="editor-content" id="editor-content" contenteditable="true"></div>
+      </div>
+
+      <div class="detail-actions" id="detail-actions-view">
         <button class="btn btn-primary" onclick="closeDetail()">返回列表</button>
+        <button class="btn" style="background:var(--accent);color:#fff" onclick="enterEditMode()">&#9998; 编辑正文</button>
         <button class="btn btn-cancel" onclick="deleteFromDetail()">删除此文</button>
       </div>
+      <div class="detail-actions" id="detail-actions-edit" style="display:none">
+        <button class="btn btn-primary" onclick="saveContent()">&#128190; 保存</button>
+        <button class="btn btn-cancel" onclick="exitEditMode(false)">取消</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== INSERT IMAGE/VIDEO MODAL ==================== -->
+<div class="insert-modal" id="insert-modal" onclick="closeInsertModalOutside(event)">
+  <div class="insert-dialog" onclick="event.stopPropagation()">
+    <h3 id="insert-modal-title">插入图片</h3>
+    <div class="form-group">
+      <label id="insert-modal-label" for="insert-url">图片 URL</label>
+      <input type="url" id="insert-url" placeholder="https://example.com/image.jpg" autocomplete="off">
+    </div>
+    <div class="form-group" id="insert-caption-group" style="display:none">
+      <label for="insert-caption">视频标题（可选）</label>
+      <input type="text" id="insert-caption" placeholder="视频标题">
+    </div>
+    <div class="insert-preview" id="insert-preview"></div>
+    <div class="insert-actions">
+      <button class="btn btn-cancel" onclick="closeInsertModal()">取消</button>
+      <button class="btn btn-primary" id="insert-confirm-btn" onclick="confirmInsert()">插入</button>
     </div>
   </div>
 </div>
@@ -536,19 +679,36 @@
 <script>
   /* ========== State ========== */
   const COLORS = ['#0969da','#1a7f37','#cf222e','#8250df','#bf3989','#0550ae'];
+  const SAMPLE_CONTENT = {
+    1: `<h2>前言</h2><p>TCP 协议栈是网络编程的核心，用 Rust 从零实现一个 TCP 协议栈不仅能深入理解协议细节，还能充分发挥 Rust 的所有权与零拷贝优势。</p><p>本文记录了我用 Rust 重写 TCP 协议栈的全过程，涵盖：</p><ul><li>三次握手与四次挥手的状态机实现</li><li>滑动窗口与拥塞控制算法</li><li>零拷贝缓冲区设计</li></ul><h2>核心数据结构</h2><pre><code>struct TcpSocket {
+    state: TcpState,
+    send_buf: RingBuffer&lt;u8&gt;,
+    recv_buf: RingBuffer&lt;u8&gt;,
+    snd_nxt: u32,  // 下一个要发送的序列号
+    rcv_nxt: u32,  // 下一个要接收的序列号
+}</code></pre><h2>拥塞控制</h2><p>实现了 CUBIC 算法，在高速网络下表现良好。测试环境：</p><ul><li>延迟：5ms</li><li>带宽：1Gbps</li><li>丢包率：0.1%</li></ul><p>优化后吞吐量提升了 <strong>3.2x</strong>。</p>`,
+    4: `<h2>常见坑点</h2><p>STM32 HAL 库虽然封装了很多底层细节，但在实际项目中踩了不少坑。</p><h3>1. SPI DMA 丢数据</h3><p>问题：启用 SPI DMA 后，偶尔出现数据丢失。原因：DMA 传输完成中断与 SPI 传输完成标志不同步。</p><pre><code>// 错误写法
+HAL_SPI_Transmit_DMA(&amp;hspi1, buf, len);
+// 立即操作 buf ← 这里 buf 可能还在传输中！
+
+// 正确写法：在传输完成回调中操作
+void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi) {
+    // 这里才能安全操作 buf
+}</code></pre><h3>2. I2C 总线卡死</h3><p>HAL I2C 在从设备无响应时容易卡死，需要手动复位总线。</p><blockquote>建议在 I2C 初始化时顺便配置超时检测，避免系统级卡死。</blockquote>`,
+  };
   const DEFAULT_ARTICLES = [
-    { id:1, title:'用 Rust 重写一个 TCP 协议栈', category:'代码', desc:'从零实现 TCP 协议栈，探讨拥塞控制、滑动窗口等核心机制，记录踩过的坑与性能优化经验。', featured:true, color:COLORS[0], image:'' },
-    { id:2, title:'从单体到微服务：我的架构演进之路', category:'架构', desc:'分享一个中型项目从单体架构逐步演进到微服务架构的完整过程，含选型对比与实际问题。', featured:true, color:COLORS[1], image:'' },
-    { id:3, title:'嵌入式 Linux 启动优化实战', category:'代码', desc:'将设备启动时间从 8 秒优化到 2.5 秒，详细记录内核裁剪、initramfs 与 systemd 的调优过程。', featured:true, color:COLORS[2], image:'' },
-    { id:4, title:'STM32 HAL 库的那些坑', category:'踩坑', desc:'SPI DMA 传输丢数据？I2C 总线卡死？整理 HAL 库开发中最常见的 10 个坑及解决方案。', featured:false, color:COLORS[3], image:'' },
-    { id:5, title:'设计一个高性能消息队列', category:'架构', desc:'从需求分析到技术选型，设计一个支持百万 TPS 的消息队列，并深入讨论存储与复制机制。', featured:false, color:COLORS[4], image:'' },
-    { id:6, title:'CMake 现代工程实践指南', category:'工具', desc:'告别混乱的 CMakeLists.txt，用 Modern CMake 最佳实践管理复杂的 C/C++ 嵌入式项目。', featured:false, color:COLORS[5], image:'' },
-    { id:7, title:'PostgreSQL 查询优化 20 条经验', category:'踩坑', desc:'整理实际项目中遇到的慢查询问题，覆盖索引设计、执行计划分析、锁排查等核心场景。', featured:false, color:COLORS[0], image:'' },
-    { id:8, title:'Docker 多阶段构建最佳实践', category:'工具', desc:'如何用多阶段构建将 Docker 镜像从 1.2GB 瘦身到 80MB，附完整 Dockerfile 示例。', featured:false, color:COLORS[1], image:'' },
-    { id:9, title:'自建 Git 服务器选型对比', category:'工具', desc:'Gitea vs GitLab vs Gogs 全面对比，从安装部署、资源占用到功能覆盖度的详细评测。', featured:false, color:COLORS[2], image:'' },
-    { id:10, title:'FreeRTOS 任务调度源码分析', category:'代码', desc:'深入 FreeRTOS 内核，逐行分析任务调度器的实现原理，理解抢占与时间片轮转的细节。', featured:false, color:COLORS[3], image:'' },
-    { id:11, title:'年终总结：2025 技术成长回顾', category:'关于', desc:'回顾过去一年的技术成长：掌握的新技能、参与的项目、阅读的书单，以及对 2026 的展望。', featured:false, color:COLORS[4], image:'' },
-    { id:12, title:'关于我', category:'关于', desc:'一枚嵌入式工程师，热爱开源，喜欢钻研底层原理。这里是我的技术自留地。', featured:false, color:COLORS[5], image:'' },
+    { id:1, title:'用 Rust 重写一个 TCP 协议栈', category:'代码', desc:'从零实现 TCP 协议栈，探讨拥塞控制、滑动窗口等核心机制，记录踩过的坑与性能优化经验。', featured:true, color:COLORS[0], image:'', content: SAMPLE_CONTENT[1] || '' },
+    { id:2, title:'从单体到微服务：我的架构演进之路', category:'架构', desc:'分享一个中型项目从单体架构逐步演进到微服务架构的完整过程，含选型对比与实际问题。', featured:true, color:COLORS[1], image:'', content:'' },
+    { id:3, title:'嵌入式 Linux 启动优化实战', category:'代码', desc:'将设备启动时间从 8 秒优化到 2.5 秒，详细记录内核裁剪、initramfs 与 systemd 的调优过程。', featured:true, color:COLORS[2], image:'', content:'' },
+    { id:4, title:'STM32 HAL 库的那些坑', category:'踩坑', desc:'SPI DMA 传输丢数据？I2C 总线卡死？整理 HAL 库开发中最常见的 10 个坑及解决方案。', featured:false, color:COLORS[3], image:'', content: SAMPLE_CONTENT[4] || '' },
+    { id:5, title:'设计一个高性能消息队列', category:'架构', desc:'从需求分析到技术选型，设计一个支持百万 TPS 的消息队列，并深入讨论存储与复制机制。', featured:false, color:COLORS[4], image:'', content:'' },
+    { id:6, title:'CMake 现代工程实践指南', category:'工具', desc:'告别混乱的 CMakeLists.txt，用 Modern CMake 最佳实践管理复杂的 C/C++ 嵌入式项目。', featured:false, color:COLORS[5], image:'', content:'' },
+    { id:7, title:'PostgreSQL 查询优化 20 条经验', category:'踩坑', desc:'整理实际项目中遇到的慢查询问题，覆盖索引设计、执行计划分析、锁排查等核心场景。', featured:false, color:COLORS[0], image:'', content:'' },
+    { id:8, title:'Docker 多阶段构建最佳实践', category:'工具', desc:'如何用多阶段构建将 Docker 镜像从 1.2GB 瘦身到 80MB，附完整 Dockerfile 示例。', featured:false, color:COLORS[1], image:'', content:'' },
+    { id:9, title:'自建 Git 服务器选型对比', category:'工具', desc:'Gitea vs GitLab vs Gogs 全面对比，从安装部署、资源占用到功能覆盖度的详细评测。', featured:false, color:COLORS[2], image:'', content:'' },
+    { id:10, title:'FreeRTOS 任务调度源码分析', category:'代码', desc:'深入 FreeRTOS 内核，逐行分析任务调度器的实现原理，理解抢占与时间片轮转的细节。', featured:false, color:COLORS[3], image:'', content:'' },
+    { id:11, title:'年终总结：2025 技术成长回顾', category:'关于', desc:'回顾过去一年的技术成长：掌握的新技能、参与的项目、阅读的书单，以及对 2026 的展望。', featured:false, color:COLORS[4], image:'', content:'' },
+    { id:12, title:'关于我', category:'关于', desc:'一枚嵌入式工程师，热爱开源，喜欢钻研底层原理。这里是我的技术自留地。', featured:false, color:COLORS[5], image:'', content:'' },
   ];
 
   let articles = loadArticles();
@@ -560,7 +720,12 @@
   function loadArticles() {
     const saved = localStorage.getItem('blog_articles');
     if (saved) {
-      try { return JSON.parse(saved); } catch(e) {}
+      try {
+        const data = JSON.parse(saved);
+        // Migration: add content field if missing
+        data.forEach(a => { if (a.content === undefined) a.content = ''; });
+        return data;
+      } catch(e) {}
     }
     return [...DEFAULT_ARTICLES];
   }
@@ -793,6 +958,7 @@
 
   /* ========== View ========== */
   let currentDetailId = null;
+  let insertMode = null; // 'image' or 'video'
 
   function viewArticle(id) {
     const a = articles.find(x => x.id === id);
@@ -814,7 +980,14 @@
 
     document.getElementById('detail-category').textContent = a.category;
     document.getElementById('detail-title').textContent = a.title;
-    document.getElementById('detail-desc').textContent = a.desc || '（暂无详细内容，敬请期待……）';
+
+    // Render content (HTML) in view mode
+    const bodyView = document.getElementById('detail-body-view');
+    if (a.content && a.content.trim()) {
+      bodyView.innerHTML = a.content;
+    } else {
+      bodyView.innerHTML = '<p style="color:var(--text-muted);font-style:italic">（暂无正文，点击「编辑正文」开始写作…）</p>';
+    }
 
     // Meta info
     const dateStr = new Date(a.id).toLocaleDateString('zh-CN', {
@@ -825,6 +998,9 @@
       <span>&#128451; ${a.category}</span>
       ${a.featured ? '<span style="color:#cf222e">&#11088; 精选</span>' : ''}
     `;
+
+    // Ensure view mode is shown (not edit mode)
+    exitEditMode(false);
 
     // Show overlay
     document.getElementById('detail-overlay').classList.add('active');
@@ -846,6 +1022,174 @@
     if (!confirm('确定要删除这篇文章吗？')) return;
     deleteArticle(currentDetailId);
     closeDetail();
+  }
+
+  /* ========== Edit Mode ========== */
+  function enterEditMode() {
+    const a = articles.find(x => x.id === currentDetailId);
+    if (!a) return;
+
+    // Load content into editor
+    document.getElementById('editor-content').innerHTML = a.content || '';
+
+    // Switch view
+    document.getElementById('detail-body-view').style.display = 'none';
+    document.getElementById('editor-wrapper').style.display = 'block';
+    document.getElementById('detail-actions-view').style.display = 'none';
+    document.getElementById('detail-actions-edit').style.display = 'flex';
+  }
+
+  function exitEditMode(confirmSave) {
+    if (confirmSave === false) {
+      // Just cancel, don't prompt
+    }
+
+    document.getElementById('detail-body-view').style.display = 'block';
+    document.getElementById('editor-wrapper').style.display = 'none';
+    document.getElementById('detail-actions-view').style.display = 'flex';
+    document.getElementById('detail-actions-edit').style.display = 'none';
+
+    // Re-render content in view mode
+    const a = articles.find(x => x.id === currentDetailId);
+    if (a && a.content) {
+      document.getElementById('detail-body-view').innerHTML = a.content;
+    }
+  }
+
+  function saveContent() {
+    const a = articles.find(x => x.id === currentDetailId);
+    if (!a) return;
+
+    const html = document.getElementById('editor-content').innerHTML;
+    a.content = html;
+    saveArticles();
+
+    exitEditMode();
+    showToast('正文已保存！');
+  }
+
+  /* ========== Editor Toolbar ========== */
+  function execCmd(cmd, val) {
+    document.getElementById('editor-content').focus();
+    if (val !== undefined) {
+      document.execCommand(cmd, false, val);
+    } else {
+      document.execCommand(cmd, false, null);
+    }
+  }
+
+  /* ========== Insert Image ========== */
+  function insertImage() {
+    insertMode = 'image';
+    document.getElementById('insert-modal-title').textContent = '插入图片';
+    document.getElementById('insert-modal-label').textContent = '图片 URL';
+    document.getElementById('insert-url').placeholder = 'https://example.com/image.jpg';
+    document.getElementById('insert-url').value = '';
+    document.getElementById('insert-caption-group').style.display = 'none';
+    document.getElementById('insert-preview').innerHTML = '';
+    document.getElementById('insert-modal').classList.add('active');
+    setTimeout(() => document.getElementById('insert-url').focus(), 100);
+
+    // Live preview
+    const urlInput = document.getElementById('insert-url');
+    urlInput.oninput = function() {
+      const url = this.value.trim();
+      const preview = document.getElementById('insert-preview');
+      if (url && (url.endsWith('.jpg') || url.endsWith('.jpeg') || url.endsWith('.png') || url.endsWith('.gif') || url.endsWith('.webp') || url.includes('img') || url.includes('image'))) {
+        preview.innerHTML = `<img src="${escapeHtml(url)}" alt="预览" style="max-width:100%;max-height:140px;border-radius:6px" onerror="this.style.display='none'">`;
+      } else {
+        preview.innerHTML = '';
+      }
+    };
+  }
+
+  /* ========== Insert Video ========== */
+  function insertVideo() {
+    insertMode = 'video';
+    document.getElementById('insert-modal-title').textContent = '插入视频';
+    document.getElementById('insert-modal-label').textContent = '视频 URL（支持 B站 / YouTube / 直接视频文件）';
+    document.getElementById('insert-url').placeholder = 'https://www.bilibili.com/video/BV... 或 https://youtu.be/...';
+    document.getElementById('insert-url').value = '';
+    document.getElementById('insert-caption-group').style.display = 'none';
+    document.getElementById('insert-preview').innerHTML = '';
+    document.getElementById('insert-modal').classList.add('active');
+    setTimeout(() => document.getElementById('insert-url').focus(), 100);
+
+    // Clear preview on input
+    document.getElementById('insert-url').oninput = function() {
+      document.getElementById('insert-preview').innerHTML = '<span style="font-size:13px;color:var(--text-muted)">输入 URL 后点击「插入」即可</span>';
+    };
+  }
+
+  /* ========== Confirm Insert ========== */
+  function confirmInsert() {
+    const url = document.getElementById('insert-url').value.trim();
+    if (!url) {
+      showToast('请输入 URL');
+      return;
+    }
+
+    let html = '';
+    if (insertMode === 'image') {
+      html = `<p><img src="${escapeHtml(url)}" alt="图片"></p>`;
+    } else if (insertMode === 'video') {
+      html = generateVideoEmbed(url);
+    }
+
+    // Insert at cursor position in contenteditable
+    const editor = document.getElementById('editor-content');
+    editor.focus();
+
+    // Try to insert at cursor
+    const sel = window.getSelection();
+    if (sel.rangeCount > 0 && editor.contains(sel.anchorNode)) {
+      const range = sel.getRangeAt(0);
+      range.deleteContents();
+      const fragment = range.createContextualFragment(html);
+      range.insertNode(fragment);
+      // Move cursor after inserted content
+      range.collapse(false);
+    } else {
+      // Append to end
+      editor.innerHTML += html;
+    }
+
+    closeInsertModal();
+    showToast(insertMode === 'image' ? '图片已插入' : '视频已插入');
+  }
+
+  function generateVideoEmbed(url) {
+    // Bilibili
+    const biliMatch = url.match(/bilibili\.com\/video\/(BV\w+)/i);
+    if (biliMatch) {
+      const bvid = biliMatch[1];
+      return `<p><iframe src="//player.bilibili.com/player.html?bvid=${bvid}&autoplay=0" width="720" height="450" allowfullscreen frameborder="0" style="max-width:100%;border-radius:8px"></iframe></p>`;
+    }
+
+    // YouTube
+    const ytMatch1 = url.match(/youtube\.com\/watch\?v=([\w-]+)/i);
+    const ytMatch2 = url.match(/youtu\.be\/([\w-]+)/i);
+    const ytId = ytMatch1 ? ytMatch1[1] : (ytMatch2 ? ytMatch2[1] : null);
+    if (ytId) {
+      return `<p><iframe src="https://www.youtube.com/embed/${ytId}?rel=0" width="720" height="450" allowfullscreen frameborder="0" style="max-width:100%;border-radius:8px"></iframe></p>`;
+    }
+
+    // Direct video file
+    if (url.match(/\.(mp4|webm|ogg|mov)(\?.*)?$/i)) {
+      return `<p><video src="${escapeHtml(url)}" controls style="max-width:100%;border-radius:8px"></video></p>`;
+    }
+
+    // Generic iframe fallback
+    return `<p><a href="${escapeHtml(url)}" target="_blank" style="color:var(--accent)">${escapeHtml(url)}</a></p>`;
+  }
+
+  function closeInsertModal() {
+    document.getElementById('insert-modal').classList.remove('active');
+    insertMode = null;
+  }
+
+  function closeInsertModalOutside(e) {
+    if (e.target === document.getElementById('insert-modal')) closeInsertModal();
   }
 
   /* ========== Trash Page ========== */
@@ -968,9 +1312,32 @@
 
   /* ========== Keyboard ========== */
   document.addEventListener('keydown', e => {
+    // Insert modal open → Escape closes it first
+    if (e.key === 'Escape' && document.getElementById('insert-modal').classList.contains('active')) {
+      closeInsertModal();
+      e.preventDefault();
+      return;
+    }
+    // Detail overlay open → Escape closes detail (unless editor focused and user wants undo)
     if (e.key === 'Escape') {
-      closeModal();
+      if (document.getElementById('editor-wrapper').style.display === 'block') {
+        // In edit mode, Escape cancels edit
+        if (confirm('放弃编辑并退出？')) {
+          exitEditMode(false);
+        }
+        e.preventDefault();
+        return;
+      }
       closeDetail();
+      e.preventDefault();
+      return;
+    }
+    // Ctrl+S → save content when in edit mode
+    if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+      if (document.getElementById('editor-wrapper').style.display === 'block') {
+        e.preventDefault();
+        saveContent();
+      }
     }
     if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
       e.preventDefault();
